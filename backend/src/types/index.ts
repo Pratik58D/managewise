@@ -1,4 +1,6 @@
-export interface IUser{
+import type { Document, Types } from "mongoose";
+
+export interface IUser extends Document{
   name: string;
   email: string;
   password: string;
@@ -6,11 +8,25 @@ export interface IUser{
 }
 
 
-export interface IProduct  {
+export interface IProduct extends Document  {
   name: string;
   sku: string;
-  category: string;
+  category: Types.ObjectId;
   price: number;
   quantity: number;
   description?: string;
+}
+
+export interface ICategory extends Document{
+  name: string;
+  createdAt: Date;
+}
+
+
+export interface IStockHistory extends Document {
+  productId: Types.ObjectId;
+  userId: Types.ObjectId;
+  change: number;
+  note?: string;
+  createdAt: Date;
 }
