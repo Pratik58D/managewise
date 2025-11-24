@@ -5,6 +5,8 @@ export interface IUser extends Document{
   email: string;
   password: string;
   role: "ADMIN" | "STAFF";
+  resetPasswordToken? : string | null;
+  resetPasswordExpires? : Date | null;
 }
 
 
