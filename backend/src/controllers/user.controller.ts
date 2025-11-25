@@ -5,6 +5,7 @@ import { AppError } from '../utils/AppError.js'
 import { JWT_SECRET } from '../utils/env.js'
 import type { Request, Response, NextFunction } from 'express'
 import crypto from "crypto";
+import { sentResetPasswordEmail } from '../services/email.service.js'
 
 class UserController {
     // signup
@@ -71,12 +72,21 @@ class UserController {
             const resetTokenHash = await bcrypt.hash(resetToken, 10);
 
             // Store hashed token and expiry in DB
-            user.set('resetPasswordToken', resetTokenHash);
-            user.set('resetPasswordExpires', Date.now() + 1000 * 60 * 15); // 15 minutes
+            user.resetPasswordToken = resetTokenHash;
+            user.resetPasswordExpires=new Date(Date.now() + 2 * 60 * 1000);
+
             await user.save();
+            
+            const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}&email=${email}`;
+      
 
             // TODO: send email with link: `${FRONTEND_URL}/reset-password?token=${resetToken}&email=${email}`
             console.log(`Reset Link: /reset-password?token=${resetToken}&email=${email}`);
+
+             // send email with Resend
+
+            await sentResetPasswordEmail(email , resetLink)
+
 
             return res.json({
                 success: true,
@@ -89,32 +99,41 @@ class UserController {
     }
 
     // Reset Password
-// /reset-password?token=abcdefghijkl&email=test@gmail.com  :: reset link
+    // /reset-password?token=abcdefghijkl&email=test@gmail.com  :: reset link
 
     async resetPassword(req: Request, res: Response, next: NextFunction) {
         try {
             const { email, token, newPassword } = req.body;
+
+            if (!token || !email || !newPassword) throw new AppError("Missing required fields", 400)
+
             const user = await User.findOne({ email })
             if (!user) throw new AppError("Invalid request", 400);
 
 
-            if (!user.get('resetPasswordToken') || !user.get('resetPasswordExpires'))
-                throw new AppError("Reset token invalid or expired", 400);
+           if(!user.resetPasswordToken || !user.resetPasswordExpires){
+            throw new AppError("Invalid or expired",400);
+           }
 
-            if (Date.now() > user.get('resetPasswordExpires'))
+            if (Date.now() > user.resetPasswordExpires.getTime()){
                 throw new AppError("Reset token expired", 400);
+            }
 
-            const isValidToken = await bcrypt.compare(token, user.get('resetPasswordToken'));
-            if (!isValidToken) throw new AppError("Invalid reset token", 400);
+            const isValid = await bcrypt.compare(token, user.resetPasswordToken);
+            if (!isValid) throw new AppError("Invalid reset token", 400);
 
             // Update password
             const hashedPassword = await bcrypt.hash(newPassword, 10);
-            user.set('password', hashedPassword);
-            user.set('resetPasswordToken', undefined);
-            user.set('resetPasswordExpires', undefined);
-            await user.save();
-            return res.json({ success: true, message: "Password successfully reset." });
 
+            user.password  = hashedPassword;
+            user.resetPasswordToken = null;
+            user.resetPasswordExpires = null;
+            await user.save();
+
+            return res.json({ 
+                success: true, 
+                message: "Password successfully reset."
+             });
         } catch (error) {
             next(error);
         }

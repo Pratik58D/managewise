@@ -2,9 +2,13 @@ import express from "express";
 import { PORT } from "./utils/env.js";
 import userRoutes from "./routes/user.routes.js"
 import { errorMiddleware } from "./middleware/error.middleware.js";
+import connectDB from "./config/db.js";
 
 
 const app= express();
+
+// database connection
+connectDB();
 
 // use middleware
 app.use(express.json());
