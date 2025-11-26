@@ -1,3 +1,6 @@
+"use client"
+
+import { useState } from "react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
@@ -16,28 +19,49 @@ import {
 import { Input } from "@/components/ui/input"
 import { axiosInstance } from "@/lib/axios"
 import { toast } from "sonner"
+import axios from "axios"
+import { useRouter } from "next/navigation"
 
 export function SignupForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
-    const [form, setForm] = useState({ name: "", email: "", password: "" });
-      
-    const handleChange = (e) => {
-        const { name, value } = e.target;
 
-        setForm({ ...form, [name]: value })
-    }
+  const [form, setForm] = useState({ name: "", email: "", password: "" });
+  const [confirmPassword, setConfirmPassword] = useState("");
+
+  const router = useRouter();
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setForm({ ...form, [name]: value })
+  }
 
 
-    const handleSubmit = async (e: any) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
+      if(form.password !== confirmPassword){
+        toast.error("Passwords donot match");
+        return
+      }
       const res = await axiosInstance.post("/user/signup", form);
       toast.success("Account created successfully!");
+      setForm({ name: "", email: "", password: ""})
+      setConfirmPassword("");
       console.log(res.data);
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || "Something went wrong");
+      router.push("/login")
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err)) {
+        const message =
+      err.response?.data?.message ||
+      err.response?.data?.error ||
+      "Something went wrong";
+       toast.error(message);
+      } else {
+        toast.error("unexpected error occurred");
+      }
+
     }
   };
 
@@ -53,24 +77,26 @@ export function SignupForm({
         </CardHeader>
         <CardContent>
           <form
-           onSubmit={handleSubmit}
+            onSubmit={handleSubmit}
           >
             <FieldGroup>
               <Field>
                 <FieldLabel htmlFor="name">Full Name</FieldLabel>
                 <Input
-                 id="name" 
-                 type="text" 
-                 placeholder="Ram Devkota"
-                 onChange = {handleChange}
-                 value={form.name}
-                  required 
-                  />
+                  id="name"
+                  name="name"
+                  type="text"
+                  placeholder="Ram Devkota"
+                  onChange={handleChange}
+                  value={form.name}
+                  required
+                />
               </Field>
               <Field>
                 <FieldLabel htmlFor="email">Email</FieldLabel>
                 <Input
                   id="email"
+                  name="email"
                   type="email"
                   placeholder="abc@example.com"
                   value={form.email}
@@ -83,22 +109,26 @@ export function SignupForm({
                 <Field className="grid grid-cols-2 gap-4">
                   <Field>
                     <FieldLabel htmlFor="password">Password</FieldLabel>
-                    <Input 
-                    id="password" 
-                    type="password" 
-                     value={form.password}
+                    <Input
+                      id="password"
+                      name="password"
+                      type="password"
+                      value={form.password}
                       onChange={handleChange}
-                    required
-                     />
+                      required
+                    />
                   </Field>
                   <Field>
                     <FieldLabel htmlFor="confirm-password">
                       Confirm Password
                     </FieldLabel>
-                    <Input 
-                    id="confirm-password" 
-                    type="password" 
-                    required 
+                    <Input
+                      id="confirm-password"
+                      name="confirmPassword"
+                      type="password"
+                      value={confirmPassword}
+                      onChange={(e)=> setConfirmPassword(e.target.value)}
+                      required
                     />
                   </Field>
                 </Field>
@@ -115,11 +145,7 @@ export function SignupForm({
             </FieldGroup>
           </form>
         </CardContent>
-      </Card>
-      <FieldDescription className="px-6 text-center">
-        By clicking continue, you agree to our <a href="#">Terms of Service</a>{" "}
-        and <a href="#">Privacy Policy</a>.
-      </FieldDescription>
+      </Card>    
     </div>
   )
 }

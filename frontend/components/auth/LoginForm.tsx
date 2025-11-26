@@ -19,26 +19,41 @@ import {
     FieldLabel,
 } from "@/components/ui/field"
 import { toast } from 'sonner';
+import axios from 'axios';
+import { useRouter } from 'next/navigation';
 
 const LoginForm = ({ className, ...props }: React.ComponentProps<"div">) => {
     const [form, setForm] = useState({ email: "", password: "" });
 
-    const handleChange = (e) => {
+    const router = useRouter();
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
 
         setForm({ ...form, [name]: value })
     }
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         try {
             const res = await axiosInstance.post("/user/login", form);
             toast.success("Logged in");
+            setForm({ email: "", password: "" })
+            router.push("/dashboard")
+
             console.log(res.data);
 
-        } catch (error: any) {
-            toast.error(error.response?.data?.message || "Something went wrong");
-        }
+        } catch (err: unknown) {
+            if (axios.isAxiosError(err)) {
+                const message =
+                    err.response?.data?.message ||
+                    err.response?.data?.error ||
+                    "Something went wrong";
+                toast.error(message);
+            } else {
+                toast.error("unexpected error occurred");
+            }
+        };
     }
 
 
@@ -61,6 +76,7 @@ const LoginForm = ({ className, ...props }: React.ComponentProps<"div">) => {
                                 <FieldLabel htmlFor="email">Email</FieldLabel>
                                 <Input
                                     id='email'
+                                    name = "email"
                                     placeholder="abc@example.com"
                                     type="email"
                                     value={form.email}
@@ -72,7 +88,7 @@ const LoginForm = ({ className, ...props }: React.ComponentProps<"div">) => {
                                 <div className="flex items-center">
                                     <FieldLabel htmlFor="password">Password</FieldLabel>
                                     <a
-                                        href="#"
+                                        href="/forget-password"
                                         className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
                                     >
                                         Forgot your password?
@@ -80,6 +96,7 @@ const LoginForm = ({ className, ...props }: React.ComponentProps<"div">) => {
                                 </div>
                                 <Input
                                     id='password'
+                                    name='password'
                                     placeholder='Passsword'
                                     type="password"
                                     value={form.password}
