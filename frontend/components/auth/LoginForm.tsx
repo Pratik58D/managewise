@@ -76,7 +76,7 @@ const LoginForm = ({ className, ...props }: React.ComponentProps<"div">) => {
                                 <FieldLabel htmlFor="email">Email</FieldLabel>
                                 <Input
                                     id='email'
-                                    name = "email"
+                                    name="email"
                                     placeholder="abc@example.com"
                                     type="email"
                                     value={form.email}
@@ -105,9 +105,15 @@ const LoginForm = ({ className, ...props }: React.ComponentProps<"div">) => {
                                 <Button type='submit' className='w-full'>
                                     Login
                                 </Button>
-                                <Button variant="outline" type="button">
+                                <Button
+                                    variant="outline"
+                                    type="button"
+                                    onClick={() => window.location.href = "http://localhost:5000/api/auth/google"}
+                                >
                                     Login with Google
                                 </Button>
+
+
 
                                 <FieldDescription className="text-center">
                                     Don&apos;t have an account? <a href="signup">Sign up</a>

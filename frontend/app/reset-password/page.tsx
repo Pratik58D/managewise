@@ -1,16 +1,18 @@
-"use client";
-
 import ResetPasswordForm from "@/components/auth/ResetPasswordForm";
 
 
-export default function Page({
-  searchParams,
+export default async function Page({
+  searchParams
 }: {
-  searchParams: { token?: string; email?: string };
+  searchParams: Promise<{ token?: string; email?: string }>;
 }) {
+  // await the searchParams promise
+  const params = await searchParams;
+
+  console.log(params.token , "searchparams with token" , params.email , "searchparams email")
   return (
     <div className="flex justify-center items-center h-screen">
-      <ResetPasswordForm token={searchParams.token} email={searchParams.email} />
+      <ResetPasswordForm token={params.token} email={params.email} />
     </div>
   );
 }
