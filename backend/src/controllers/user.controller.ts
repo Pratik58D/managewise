@@ -64,7 +64,7 @@ class UserController {
     async forgotPassword(req: Request, res: Response, next: NextFunction) {
         try {
             const { email } = req.body;
-            console.log("coming email:" , email)
+
             const user = await User.findOne({ email });
             if (!user) throw new AppError("User not found", 404);
 
@@ -80,7 +80,7 @@ class UserController {
             
             const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}&email=${email}`;
 
-            console.log({resetLink})
+            // console.log({resetLink})
       
             // TODO: send email with link: `${FRONTEND_URL}/reset-password?token=${resetToken}&email=${email}`
              // send email with Resend

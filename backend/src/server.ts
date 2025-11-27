@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors"
 import { PORT } from "./utils/env.js";
 import userRoutes from "./routes/user.routes.js"
+import googleRoutes from "./routes/googlesignin.route.js"
 import { errorMiddleware } from "./middleware/error.middleware.js";
 import connectDB from "./config/db.js";
 
@@ -21,7 +22,8 @@ app.use(
 }))
 
 
-app.use("/api/v1/user",userRoutes)
+app.use("/api/v1/user",userRoutes);
+app.use("/api", googleRoutes)
 
 app.use(errorMiddleware)
 
