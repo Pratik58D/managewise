@@ -32,3 +32,9 @@ export interface IStockHistory extends Document {
   note?: string;
   createdAt: Date;
 }
+
+
+export interface JwtPayload {
+  id: string;
+  role: string;
+}

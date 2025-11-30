@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors"
+import cookieParser from "cookie-parser";
 import { PORT } from "./utils/env.js";
 import userRoutes from "./routes/user.routes.js"
 import googleRoutes from "./routes/googlesignin.route.js"
@@ -14,6 +15,7 @@ connectDB();
 
 // use middleware
 app.use(express.json());
+app.use(cookieParser())
 
 app.use(
     cors({
@@ -22,8 +24,9 @@ app.use(
 }))
 
 
-app.use("/api/v1/user",userRoutes);
+// Routes
 app.use("/api", googleRoutes)
+app.use("/api/v1/auth",userRoutes);
 
 app.use(errorMiddleware)
 

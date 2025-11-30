@@ -2,16 +2,26 @@ import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import User from "../models/user.model.js"
 import { AppError } from '../utils/AppError.js'
-import { JWT_SECRET } from '../utils/env.js'
+import { JWT_SECRET, NODE_ENV } from '../utils/env.js'
 import type { Request, Response, NextFunction } from 'express'
 import crypto from "crypto";
 import { sentResetPasswordEmail } from '../services/email.service.js'
 
 class UserController {
+     emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
     // signup
-    async signup(req: Request, res: Response, next: NextFunction) {
+     signup=  async(req: Request, res: Response, next: NextFunction)=> {
         try {
             const { name, email, password, role } = req.body;
+
+            if (!name || !email || !password) {
+                throw new AppError("Name, email and password are required", 400);
+            }
+
+            if (email && !this.emailRegex.test(email)) {
+                throw new AppError("Invalid email format." , 400)
+            }
 
             const existUser = await User.findOne({ email });
             if (existUser) throw new AppError('Email already in use', 409);
@@ -34,9 +44,17 @@ class UserController {
 
     // login
 
-    async login(req: Request, res: Response, next: NextFunction) {
+     login = async(req: Request, res: Response, next: NextFunction)=> {
         try {
             const { email, password } = req.body;
+
+             if (!email || !password) {
+                throw new AppError("Name, email and password are required", 400);
+            }
+
+            if (email && !this.emailRegex.test(email)) {
+                throw new AppError("Invalid email format." , 400)
+            }
 
             const user = await User.findOne({ email });
             if (!user) throw new AppError("Invalid email or passsword", 401);
@@ -47,8 +65,15 @@ class UserController {
             const token = jwt.sign(
                 { id: user._id, role: user.role },
                 JWT_SECRET,
-                { expiresIn: "1d" }
-            )
+                { expiresIn: "7d" }
+            );
+
+            res.cookie("userToken" , token,{
+                httpOnly: true,
+                secure : NODE_ENV === 'production',
+                sameSite:NODE_ENV === 'production'?'none' : "lax",
+                maxAge : 7 * 24 * 60* 60 * 1000
+            })
 
             return res.json({
                 success: true,
@@ -61,7 +86,7 @@ class UserController {
     }
 
     // forgot password
-    async forgotPassword(req: Request, res: Response, next: NextFunction) {
+     forgotPassword = async(req: Request, res: Response, next: NextFunction) =>{
         try {
             const { email } = req.body;
 
@@ -74,18 +99,18 @@ class UserController {
 
             // Store hashed token and expiry in DB
             user.resetPasswordToken = resetTokenHash;
-            user.resetPasswordExpires=new Date(Date.now() + 2 * 60 * 1000);
+            user.resetPasswordExpires = new Date(Date.now() + 2 * 60 * 1000);
 
             await user.save();
-            
+
             const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}&email=${email}`;
 
             // console.log({resetLink})
-      
-            // TODO: send email with link: `${FRONTEND_URL}/reset-password?token=${resetToken}&email=${email}`
-             // send email with Resend
 
-            await sentResetPasswordEmail(email , resetLink)
+            // TODO: send email with link: `${FRONTEND_URL}/reset-password?token=${resetToken}&email=${email}`
+            // send email with Resend
+
+            await sentResetPasswordEmail(email, resetLink)
 
             return res.json({
                 success: true,
@@ -100,7 +125,7 @@ class UserController {
     // Reset Password
     // /reset-password?token=abcdefghijkl&email=test@gmail.com  :: reset link
 
-    async resetPassword(req: Request, res: Response, next: NextFunction) {
+     resetPassword = async(req: Request, res: Response, next: NextFunction) =>{
         try {
             const { email, token, newPassword } = req.body;
 
@@ -110,11 +135,11 @@ class UserController {
             if (!user) throw new AppError("Invalid request", 400);
 
 
-           if(!user.resetPasswordToken || !user.resetPasswordExpires){
-            throw new AppError("Invalid or expired",400);
-           }
+            if (!user.resetPasswordToken || !user.resetPasswordExpires) {
+                throw new AppError("Invalid or expired", 400);
+            }
 
-            if (Date.now() > user.resetPasswordExpires.getTime()){
+            if (Date.now() > user.resetPasswordExpires.getTime()) {
                 throw new AppError("Reset token expired", 400);
             }
 
@@ -124,19 +149,41 @@ class UserController {
             // Update password
             const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-            user.password  = hashedPassword;
+            user.password = hashedPassword;
             user.resetPasswordToken = null;
             user.resetPasswordExpires = null;
             await user.save();
 
-            return res.json({ 
-                success: true, 
+            return res.json({
+                success: true,
                 message: "Password successfully reset."
-             });
+            });
         } catch (error) {
             next(error);
         }
     }
+
+
+    logout = async(req: Request, res: Response, next: NextFunction)=>{
+        try {
+            // Clear the userToken cookie
+        res.clearCookie("userToken", {
+            httpOnly: true,
+            secure: NODE_ENV === "production",
+            sameSite: NODE_ENV === "production" ? "none" : "lax",
+        });
+         return res.json({
+            success: true,
+            message: "Logged out successfully",
+        });
+            
+        } catch (error) {
+            next(error)
+            
+        }
+    }
+
+    
 }
 
 
