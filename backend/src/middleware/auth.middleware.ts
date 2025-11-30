@@ -18,7 +18,7 @@ export const authMiddleware = (req: RequestWithUser, res: Response, next : NextF
             throw new AppError("Unauthorized user!",401);
          }
           req.user = decodeToken;
-          console.log(req.user , ":from middleware");
+        //   console.log(req.user , ":from middleware");
           next();
     } catch (error) {
         next(error)

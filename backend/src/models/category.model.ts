@@ -9,11 +9,12 @@ const CategorySchema: Schema = new Schema({
         required: true,
          unique: true 
         },
+    description: {
+        type: String,
+        default: "",
+    },
   },
-  { timestamps: {
-     createdAt: true, 
-     updatedAt: false 
-    }}
+  { timestamps: true}
 );
 
 export default mongoose.model<ICategory>("Category", CategorySchema);

@@ -2,10 +2,12 @@ import express from "express";
 import cors from "cors"
 import cookieParser from "cookie-parser";
 import { PORT } from "./utils/env.js";
-import userRoutes from "./routes/user.routes.js"
-import googleRoutes from "./routes/googlesignin.route.js"
 import { errorMiddleware } from "./middleware/error.middleware.js";
 import connectDB from "./config/db.js";
+import userRoutes from "./routes/user.routes.js"
+import googleRoutes from "./routes/googlesignin.route.js"
+import categoryRoutes from "./routes/category.routes.js"
+
 
 
 const app= express();
@@ -27,6 +29,7 @@ app.use(
 // Routes
 app.use("/api", googleRoutes)
 app.use("/api/v1/auth",userRoutes);
+app.use("/api/v1/category",categoryRoutes)
 
 app.use(errorMiddleware)
 
