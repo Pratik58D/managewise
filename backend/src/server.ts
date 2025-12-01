@@ -7,6 +7,7 @@ import connectDB from "./config/db.js";
 import userRoutes from "./routes/user.routes.js"
 import googleRoutes from "./routes/googlesignin.route.js"
 import categoryRoutes from "./routes/category.routes.js"
+import productRoutes from "./routes/product.routes.js"
 
 
 
@@ -30,6 +31,7 @@ app.use(
 app.use("/api", googleRoutes)
 app.use("/api/v1/auth",userRoutes);
 app.use("/api/v1/category",categoryRoutes)
+app.use("/api/v1/product" , productRoutes)
 
 app.use(errorMiddleware)
 
