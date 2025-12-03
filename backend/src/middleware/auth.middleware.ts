@@ -3,11 +3,8 @@ import { AppError } from "../utils/AppError.js";
 import type { Request , Response,NextFunction } from "express";
 import { JWT_SECRET } from "../utils/env.js";
 
-interface RequestWithUser extends Request {
-  user?: { id: string; role: string };
-}
 
-export const authMiddleware = (req: RequestWithUser, res: Response, next : NextFunction) => {
+export const authMiddleware = (req: Request, res: Response, next : NextFunction) => {
     const token = req.cookies.userToken;
     if (!token) {
         throw new AppError("Unauthorized user !" ,401);
@@ -25,7 +22,7 @@ export const authMiddleware = (req: RequestWithUser, res: Response, next : NextF
     }
 }
 
-export const adminMiddleware = (req:RequestWithUser, res: Response, next:NextFunction )=>{
+export const adminMiddleware = (req:Request, res: Response, next:NextFunction )=>{
      if (!req.user) throw new AppError("Unauthorized", 401);
      if (req.user.role !== "ADMIN") {
         throw new AppError("Forbidden: Admins only", 403);
